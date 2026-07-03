@@ -145,6 +145,10 @@ textarea {
   align-items: center;
   gap: 56px;
   padding: 40px 24px;
+  background:
+    linear-gradient(135deg, rgba(54, 194, 138, 0.13), transparent 34%),
+    linear-gradient(315deg, rgba(29, 78, 216, 0.12), transparent 38%),
+    #eef1f5;
 }
 
 .auth-copy h1 {
@@ -195,8 +199,38 @@ textarea {
   padding: 22px;
 }
 
+.auth-panel-head {
+  margin-bottom: 18px;
+}
+
+.auth-panel-head h2 {
+  margin: 8px 0 6px;
+  font-size: 24px;
+}
+
+.auth-panel-head p {
+  margin: 0;
+  color: #657188;
+}
+
 .auth-panel .el-button {
   width: 100%;
+}
+
+.auth-switch {
+  margin-top: 16px;
+  text-align: center;
+  color: #657188;
+}
+
+.auth-switch a {
+  color: #168b63;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-switch a:hover {
+  color: #106a4b;
 }
 
 .metric-grid {
