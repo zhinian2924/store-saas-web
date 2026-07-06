@@ -3,6 +3,7 @@ import { ElMessage } from 'element-plus'
 
 export const TOKEN_KEY = 'store_saas_token'
 export const USERNAME_KEY = 'store_saas_username'
+export const ACCOUNT_TYPE_KEY = 'store_saas_account_type'
 
 export const api = axios.create({
   baseURL: '/api',
@@ -38,6 +39,7 @@ export function showApiError(error) {
 }
 
 export { authApi } from './auth'
+export { platformApi } from './platform'
 export { productApi } from './product'
 export { inventoryApi } from './inventory'
 export { orderApi } from './order'

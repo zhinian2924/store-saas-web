@@ -69,7 +69,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { Box, Goods, Refresh, ShoppingCart, SwitchButton, TrendCharts } from '@element-plus/icons-vue'
-import { authApi, inventoryApi, orderApi, productApi, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
+import { ACCOUNT_TYPE_KEY, authApi, inventoryApi, orderApi, productApi, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
 import DashboardView from '../views/DashboardView.vue'
 import InventoryView from '../views/InventoryView.vue'
 import OrdersView from '../views/OrdersView.vue'
@@ -103,6 +103,7 @@ async function logout() {
   } finally {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USERNAME_KEY)
+    localStorage.removeItem(ACCOUNT_TYPE_KEY)
     username.value = ''
     active.value = 'dashboard'
     window.location.href = '/login'
