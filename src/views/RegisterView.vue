@@ -64,7 +64,7 @@
           />
         </el-form-item>
 
-        <el-form-item label="管理员手机号" prop="mobile">
+        <el-form-item label="店主手机号" prop="mobile">
           <el-input
             v-model.trim="form.mobile"
             size="large"

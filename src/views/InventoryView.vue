@@ -6,10 +6,10 @@
           <h2>库存调整</h2>
           <p>支持采购入库、报损出库、盘盈和盘亏，后端会拒绝负库存</p>
         </div>
-        <el-button :icon="Check" type="primary" :loading="saving" @click="adjustStock">保存调整</el-button>
+        <el-button v-if="canAdjustStock" :icon="Check" type="primary" :loading="saving" @click="adjustStock">保存调整</el-button>
       </div>
 
-      <el-form :model="stockForm" class="inventory-form" label-position="top">
+      <el-form v-if="canAdjustStock" :model="stockForm" class="inventory-form" label-position="top">
         <el-form-item label="商品">
           <el-select v-model="stockForm.productId" filterable placeholder="选择商品">
             <el-option
@@ -74,7 +74,7 @@
 import { ref } from 'vue'
 import { Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { inventoryApi, showApiError } from '../api'
+import { inventoryApi, PERMISSIONS_KEY, showApiError } from '../api'
 import { dateText, flowText, productName } from '../utils/format'
 
 defineProps({
@@ -85,12 +85,21 @@ defineProps({
 const emit = defineEmits(['refresh'])
 
 const saving = ref(false)
+const canAdjustStock = readPermissions().includes('inventory:adjust')
 const stockForm = ref({
   productId: null,
   flowType: 'PURCHASE_IN',
   quantity: 10,
   remark: ''
 })
+
+function readPermissions() {
+  try {
+    return JSON.parse(localStorage.getItem(PERMISSIONS_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
 
 async function adjustStock() {
   if (!stockForm.value.productId) {

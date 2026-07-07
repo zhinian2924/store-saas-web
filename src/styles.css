@@ -581,6 +581,59 @@ textarea {
   gap: 10px;
 }
 
+.staff-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.staff-cell > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #334155;
+  font-weight: 800;
+}
+
+.staff-cell strong,
+.staff-cell small {
+  display: block;
+}
+
+.staff-cell small {
+  margin-top: 3px;
+  color: #758197;
+}
+
+.permission-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.staff-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.staff-form .el-form-item {
+  margin-bottom: 0;
+}
+
+.staff-form .el-form-item:last-child {
+  grid-column: 1 / -1;
+}
+
+.permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
 .tenant-cell {
   display: grid;
   gap: 3px;
@@ -669,6 +722,60 @@ textarea {
   color: #69758a;
 }
 
+.store-profile-card {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.store-logo-preview {
+  width: 180px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid #e0e6ef;
+  border-radius: 8px;
+  background: #f7fafc;
+}
+
+.store-logo-preview .el-image,
+.logo-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.logo-fallback {
+  display: grid;
+  place-items: center;
+  color: #157555;
+  background: #e8f7f1;
+  font-size: 52px;
+  font-weight: 800;
+}
+
+.store-profile-main {
+  min-width: 0;
+}
+
+.store-profile-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e7ebf1;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.store-profile-form .el-form-item {
+  margin-bottom: 0;
+}
+
+.store-profile-form .el-form-item:nth-child(2),
+.store-profile-form .el-form-item:nth-child(4) {
+  grid-column: 1 / -1;
+}
+
 .el-table {
   border-radius: 8px;
 }
@@ -741,7 +848,9 @@ textarea {
   .metric-grid,
   .content-grid,
   .product-form,
-  .inventory-form {
+  .inventory-form,
+  .staff-form,
+  .permission-grid {
     grid-template-columns: 1fr;
   }
 
@@ -757,6 +866,15 @@ textarea {
 
   .auth-screen {
     padding: 20px 14px;
+  }
+
+  .store-profile-card,
+  .store-profile-form {
+    grid-template-columns: 1fr;
+  }
+
+  .store-logo-preview {
+    width: 128px;
   }
 
   .auth-brand-mark {

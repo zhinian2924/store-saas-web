@@ -6,10 +6,10 @@
           <h2>分类管理</h2>
           <p>商品可以不选分类，但建议先建分类方便后续维护</p>
         </div>
-        <el-button :icon="Plus" type="primary" @click="createCategory" :loading="categorySaving">新增分类</el-button>
+        <el-button v-if="canAddProduct" :icon="Plus" type="primary" @click="createCategory" :loading="categorySaving">新增分类</el-button>
       </div>
 
-      <el-form :model="categoryForm" class="inline-form" inline>
+      <el-form v-if="canAddProduct" :model="categoryForm" class="inline-form" inline>
         <el-form-item label="分类名称">
           <el-input v-model="categoryForm.name" placeholder="例如 咖啡饮品" />
         </el-form-item>
@@ -35,10 +35,10 @@
           <h2>商品档案</h2>
           <p>新增商品会写入当前租户，库存调整和下单都会引用这里的商品</p>
         </div>
-        <el-button :icon="Plus" type="primary" @click="createProduct" :loading="productSaving">新增商品</el-button>
+        <el-button v-if="canAddProduct" :icon="Plus" type="primary" @click="createProduct" :loading="productSaving">新增商品</el-button>
       </div>
 
-      <el-form :model="productForm" class="product-form" label-position="top">
+      <el-form v-if="canAddProduct" :model="productForm" class="product-form" label-position="top">
         <el-form-item label="商品名称">
           <el-input v-model="productForm.name" placeholder="例如 拿铁咖啡" />
         </el-form-item>
@@ -94,7 +94,7 @@
 import { ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { productApi, showApiError } from '../api'
+import { PERMISSIONS_KEY, productApi, showApiError } from '../api'
 import { categoryName, dateText, money } from '../utils/format'
 
 defineProps({
@@ -106,6 +106,7 @@ const emit = defineEmits(['refresh'])
 
 const categorySaving = ref(false)
 const productSaving = ref(false)
+const canAddProduct = readPermissions().includes('product:add')
 const categoryActive = ref(true)
 const productActive = ref(true)
 const categoryForm = ref({ name: '', sortNo: 0 })
@@ -116,6 +117,14 @@ const productForm = ref({
   price: 18,
   stock: 0
 })
+
+function readPermissions() {
+  try {
+    return JSON.parse(localStorage.getItem(PERMISSIONS_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
 
 async function createCategory() {
   if (!categoryForm.value.name.trim()) {

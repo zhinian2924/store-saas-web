@@ -126,7 +126,7 @@
 import { onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ACCOUNT_TYPE_KEY, authApi, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
+import { ACCOUNT_TYPE_KEY, authApi, PERMISSIONS_KEY, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
 
 const router = useRouter()
 const smsFormRef = ref()
@@ -143,8 +143,8 @@ const smsForm = reactive({
   code: ''
 })
 const passwordForm = reactive({
-  mobile: '13800000000',
-  password: 'demo123'
+  mobile: '',
+  password: ''
 })
 
 const requiredMessage = '请填写完整登录信息'
@@ -217,6 +217,7 @@ async function saveSession(sessionPromise) {
   localStorage.setItem(TOKEN_KEY, session.tokenValue)
   localStorage.setItem(USERNAME_KEY, session.username)
   localStorage.setItem(ACCOUNT_TYPE_KEY, 'STORE')
+  localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(session.permissions || []))
   await router.push('/')
 }
 

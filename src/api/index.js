@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 export const TOKEN_KEY = 'store_saas_token'
 export const USERNAME_KEY = 'store_saas_username'
 export const ACCOUNT_TYPE_KEY = 'store_saas_account_type'
+export const PERMISSIONS_KEY = 'store_saas_permissions'
 
 export const api = axios.create({
   baseURL: '/api',
@@ -44,3 +45,5 @@ export { productApi } from './product'
 export { inventoryApi } from './inventory'
 export { orderApi } from './order'
 export { paymentApi } from './payment'
+export { storeApi } from './store'
+export { staffApi } from './staff'
