@@ -1,5 +1,5 @@
 <template>
-  <div class="shell">
+  <div class="shell store-shell">
     <aside class="sidebar">
       <div class="brand">
         <span class="brand-mark">S</span>
@@ -8,6 +8,8 @@
           <small>门店进销存</small>
         </div>
       </div>
+
+      <div class="sidebar-divider" />
 
       <nav class="nav-list">
         <button
@@ -25,14 +27,19 @@
 
     <main class="main">
       <header class="topbar">
-        <div>
+        <div class="topbar-title">
           <h1>{{ currentTitle }}</h1>
           <p>{{ currentSubtitle }}</p>
         </div>
         <div class="session">
-          <el-button :icon="Refresh" @click="refreshCurrent" :loading="loading">刷新</el-button>
-          <span>{{ username }}</span>
-          <el-button :icon="SwitchButton" @click="logout">退出</el-button>
+          <el-button class="session-action" :icon="Refresh" @click="refreshCurrent" :loading="loading">刷新</el-button>
+          <span class="session-divider" />
+          <button class="session-account" type="button" @click="openAccount">
+            <span class="session-account-name">{{ username }}</span>
+            <span class="session-account-label">账号设置</span>
+          </button>
+          <span class="session-divider" />
+          <el-button class="session-logout" :icon="SwitchButton" @click="logout">退出</el-button>
         </div>
       </header>
 
@@ -68,12 +75,31 @@
         <StaffView v-if="active === 'staff'" />
       </section>
     </main>
+
+    <el-dialog v-model="accountDialogVisible" title="我的账号" width="460px">
+      <el-form :model="accountForm" label-position="top">
+        <el-form-item label="手机号">
+          <el-input v-model="accountForm.mobile" disabled />
+        </el-form-item>
+        <el-form-item label="昵称">
+          <el-input v-model.trim="accountForm.nickname" maxlength="64" />
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input v-model="accountForm.password" show-password placeholder="不修改可留空" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="accountDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="accountSaving" @click="saveAccount">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { Box, Goods, Refresh, Shop, ShoppingCart, SwitchButton, TrendCharts, User } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { ACCOUNT_TYPE_KEY, authApi, inventoryApi, orderApi, PERMISSIONS_KEY, productApi, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
 import DashboardView from '../views/DashboardView.vue'
 import InventoryView from '../views/InventoryView.vue'
@@ -101,6 +127,13 @@ const products = ref([])
 const flows = ref([])
 const orders = ref([])
 const storeReloadKey = ref(0)
+const accountDialogVisible = ref(false)
+const accountSaving = ref(false)
+const accountForm = reactive({
+  mobile: '',
+  nickname: '',
+  password: ''
+})
 
 const nav = computed(() => allNav.filter((item) => canOpen(item)))
 const currentNav = computed(() => nav.value.find((item) => item.key === active.value) || nav.value[0] || allNav[0])
@@ -138,6 +171,43 @@ async function logout() {
     username.value = ''
     active.value = 'dashboard'
     window.location.href = '/login'
+  }
+}
+
+async function openAccount() {
+  accountDialogVisible.value = true
+  accountForm.password = ''
+  try {
+    const profile = await authApi.me()
+    Object.assign(accountForm, {
+      mobile: profile?.mobile || '',
+      nickname: profile?.nickname || profile?.username || '',
+      password: ''
+    })
+  } catch (error) {
+    showApiError(error)
+  }
+}
+
+async function saveAccount() {
+  if (!accountForm.nickname.trim()) {
+    ElMessage.warning('请填写昵称')
+    return
+  }
+  accountSaving.value = true
+  try {
+    const profile = await authApi.updateMe({
+      nickname: accountForm.nickname,
+      password: accountForm.password
+    })
+    username.value = profile?.nickname || profile?.username || username.value
+    localStorage.setItem(USERNAME_KEY, username.value)
+    accountDialogVisible.value = false
+    ElMessage.success('账号信息已更新')
+  } catch (error) {
+    showApiError(error)
+  } finally {
+    accountSaving.value = false
   }
 }
 

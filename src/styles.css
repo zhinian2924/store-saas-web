@@ -24,6 +24,12 @@ textarea {
   grid-template-columns: 248px minmax(0, 1fr);
 }
 
+.store-shell {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 220px),
+    #eef1f5;
+}
+
 .platform-shell .brand-mark,
 .platform-auth-screen .auth-brand-mark {
   background: #24344f;
@@ -52,19 +58,27 @@ textarea {
 }
 
 .sidebar {
-  background: #152033;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(54, 194, 138, 0.08), transparent 170px),
+    #152033;
   color: #f6f8fb;
-  padding: 22px 16px;
+  padding: 22px 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .brand {
   display: flex;
   gap: 12px;
   align-items: center;
-  padding: 4px 6px 10px;
+  min-height: 54px;
+  padding: 4px 6px 12px;
 }
 
 .brand-mark {
@@ -83,9 +97,19 @@ textarea {
   display: block;
 }
 
+.brand strong {
+  line-height: 1.15;
+}
+
 .brand small {
   margin-top: 3px;
   color: #9eabbc;
+}
+
+.sidebar-divider {
+  height: 1px;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
 
 .nav-list {
@@ -95,6 +119,8 @@ textarea {
 }
 
 .nav-list button {
+  position: relative;
+  overflow: hidden;
   border: 0;
   border-radius: 8px;
   padding: 12px 13px;
@@ -105,11 +131,12 @@ textarea {
   gap: 10px;
   cursor: pointer;
   text-align: left;
-  transition: background 0.16s ease, color 0.16s ease;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
 }
 
 .nav-list svg {
   width: 18px;
+  flex: 0 0 auto;
 }
 
 .nav-list button.active,
@@ -118,18 +145,64 @@ textarea {
   color: #fff;
 }
 
+.nav-list button:hover {
+  transform: translateX(2px);
+}
+
+.nav-list button.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: #36c28a;
+  transform: translateY(-50%);
+  box-shadow: 0 0 8px rgba(54, 194, 138, 0.4);
+  pointer-events: none;
+}
+
 .main {
   min-width: 0;
   padding: 26px;
+  max-height: 100vh;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.main::-webkit-scrollbar {
+  width: 6px;
+}
+
+.main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main::-webkit-scrollbar-thumb {
+  background: rgba(23, 32, 51, 0.14);
+  border-radius: 999px;
+}
+
+.main::-webkit-scrollbar-thumb:hover {
+  background: rgba(23, 32, 51, 0.24);
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   min-height: 76px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-bottom: 18px;
+  margin: -26px -26px 20px;
+  padding: 20px 26px;
+  border-bottom: 1px solid rgba(223, 228, 236, 0.72);
+  background: rgba(238, 241, 245, 0.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .topbar h1 {
@@ -143,11 +216,105 @@ textarea {
   color: #657188;
 }
 
+.topbar-title {
+  min-width: 0;
+}
+
+.topbar-title h1,
+.topbar-title p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .session {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  min-height: 40px;
+  padding: 4px 6px;
+  border: 1px solid #dfe6ef;
+  border-radius: 8px;
+  background: #ffffff;
   white-space: nowrap;
+}
+
+.session .el-button {
+  margin-left: 0;
+}
+
+.session-action.el-button {
+  min-height: 32px;
+  border-color: transparent;
+  background: transparent;
+  color: #526078;
+  padding: 8px 10px;
+}
+
+.session-action.el-button:hover {
+  border-color: transparent;
+  background: #f3f7fb;
+  color: #172033;
+}
+
+.session-divider {
+  width: 1px;
+  height: 18px;
+  flex: 0 0 auto;
+  background: #e4eaf2;
+}
+
+.session-account {
+  min-width: 0;
+  max-width: 180px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 10px;
+  background: transparent;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.session-account:hover {
+  background: #f3f7fb;
+  color: #172033;
+}
+
+.session-account-name,
+.session-account-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-account-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.session-account-label {
+  color: #758197;
+  font-size: 12px;
+}
+
+.session-logout.el-button {
+  min-height: 32px;
+  border-color: transparent;
+  background: transparent;
+  color: #657188;
+  padding: 8px 10px;
+}
+
+.session-logout.el-button:hover {
+  border-color: transparent;
+  background: #fff4f2;
+  color: #b42318;
 }
 
 .workspace,
@@ -803,25 +970,67 @@ textarea {
   }
 
   .sidebar {
+    position: static;
+    height: auto;
     padding: 14px;
+    gap: 12px;
+  }
+
+  .brand {
+    min-height: auto;
+    padding-bottom: 4px;
   }
 
   .nav-list {
     flex-direction: row;
     overflow-x: auto;
+    padding-bottom: 2px;
   }
 
   .nav-list button {
     flex: 0 0 auto;
   }
 
+  .nav-list button:hover {
+    transform: none;
+  }
+
+  .nav-list button.active::before {
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: 0;
+    width: auto;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    transform: none;
+  }
+
   .main {
+    max-height: none;
     padding: 18px;
   }
 
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+    margin: -18px -18px 18px;
+    padding: 16px 18px;
+  }
+
+  .topbar-title h1,
+  .topbar-title p {
+    white-space: normal;
+  }
+
+  .session {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .session-account {
+    max-width: min(100%, 220px);
   }
 
   .auth-screen {

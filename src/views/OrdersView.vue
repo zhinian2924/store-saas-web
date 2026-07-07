@@ -1,6 +1,6 @@
 <template>
   <div class="page-stack">
-    <section class="panel">
+    <section v-if="canUpdateOrder" class="panel">
       <div class="panel-head">
         <div>
           <h2>创建订单</h2>
@@ -35,7 +35,7 @@
       <div class="panel-head compact">
         <div>
           <h2>订单列表</h2>
-          <p>可查看订单商品明细，并对待支付订单执行模拟支付</p>
+          <p>可查看订单商品明细；有订单处理权限时可执行模拟支付</p>
         </div>
       </div>
 
@@ -57,7 +57,7 @@
             <div class="row-actions">
               <el-button size="small" @click="openItems(row)">明细</el-button>
               <el-button
-                v-if="row.status === 'PENDING_PAY'"
+                v-if="canUpdateOrder && row.status === 'PENDING_PAY'"
                 size="small"
                 type="primary"
                 :loading="payingId === row.id"
@@ -91,7 +91,7 @@
 import { computed, ref } from 'vue'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { orderApi, paymentApi, showApiError } from '../api'
+import { orderApi, paymentApi, PERMISSIONS_KEY, showApiError } from '../api'
 import { dateText, money, statusText } from '../utils/format'
 
 const props = defineProps({
@@ -107,8 +107,17 @@ const itemsDrawer = ref(false)
 const selectedOrder = ref(null)
 const orderItems = ref([])
 const orderLines = ref([newLine()])
+const canUpdateOrder = readPermissions().includes('order:update')
 
 const orderTotal = computed(() => orderLines.value.reduce((sum, line) => sum + lineAmount(line), 0))
+
+function readPermissions() {
+  try {
+    return JSON.parse(localStorage.getItem(PERMISSIONS_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
 
 function newLine() {
   return { key: `${Date.now()}-${Math.random()}`, productId: null, quantity: 1, price: 0 }

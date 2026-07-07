@@ -13,6 +13,12 @@ export const authApi = {
   register(payload) {
     return api.post('/auth/tenant/register', payload)
   },
+  me() {
+    return api.get('/auth/me')
+  },
+  updateMe(payload) {
+    return api.put('/auth/me', payload)
+  },
   logout() {
     return api.post('/auth/logout')
   }

@@ -6,7 +6,7 @@
           <h2>员工账号</h2>
           <p>店主可创建店员账号，按岗位带出默认权限后再微调授权。</p>
         </div>
-        <el-button :icon="Plus" type="primary" @click="openCreate">新增员工</el-button>
+        <el-button v-if="canAddStaff" :icon="Plus" type="primary" @click="openCreate">新增员工</el-button>
       </div>
 
       <el-table v-loading="loading" :data="staff" stripe empty-text="暂无员工">
@@ -39,8 +39,8 @@
         <el-table-column label="操作" width="170" fixed="right">
           <template #default="{ row }">
             <div class="row-actions">
-              <el-button size="small" @click="openEdit(row)">编辑</el-button>
-              <el-button size="small" :type="row.status === 1 ? 'warning' : 'success'" @click="toggleStatus(row)">
+              <el-button v-if="canUpdateStaff" size="small" @click="openEdit(row)">编辑</el-button>
+              <el-button v-if="canDisableStaff" size="small" :type="row.status === 1 ? 'warning' : 'success'" @click="toggleStatus(row)">
                 {{ row.status === 1 ? '停用' : '启用' }}
               </el-button>
             </div>
@@ -62,9 +62,9 @@
         </el-form-item>
         <el-form-item label="岗位">
           <el-select v-model="form.staffRole" @change="applyRolePermissions">
-            <el-option label="收银员" value="CASHIER" />
+            <el-option label="订单专员" value="CASHIER" />
             <el-option label="库管" value="WAREHOUSE" />
-            <el-option label="店长助理" value="MANAGER_ASSISTANT" />
+            <el-option label="助理" value="MANAGER_ASSISTANT" />
           </el-select>
         </el-form-item>
         <el-form-item label="权限">
@@ -87,32 +87,39 @@
 import { onMounted, reactive, ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { showApiError, staffApi } from '../api'
+import { PERMISSIONS_KEY, showApiError, staffApi } from '../api'
 
 const roleText = {
-  CASHIER: '收银员',
+  CASHIER: '订单专员',
   WAREHOUSE: '库管',
-  MANAGER_ASSISTANT: '店长助理'
+  MANAGER_ASSISTANT: '助理'
 }
 
 const roleDefaults = {
-  CASHIER: ['product:view', 'order:view'],
-  WAREHOUSE: ['product:view', 'inventory:view', 'inventory:adjust'],
-  MANAGER_ASSISTANT: ['product:view', 'product:add', 'product:update', 'inventory:view', 'inventory:adjust', 'order:view', 'statistics:view']
+  CASHIER: ['order:view', 'order:update'],
+  WAREHOUSE: ['product:view', 'product:add', 'product:update', 'inventory:view', 'inventory:adjust'],
+  MANAGER_ASSISTANT: ['store:view', 'product:view', 'inventory:view', 'order:view', 'staff:view', 'statistics:view']
 }
 
 const permissionOptions = [
   { value: 'store:view', label: '查看门店资料' },
+  { value: 'store:update', label: '修改门店信息' },
   { value: 'product:view', label: '查看商品' },
   { value: 'product:add', label: '新增商品' },
   { value: 'product:update', label: '维护商品' },
   { value: 'inventory:view', label: '查看库存' },
   { value: 'inventory:adjust', label: '调整库存' },
-  { value: 'order:view', label: '订单管理' },
+  { value: 'order:view', label: '查看订单' },
+  { value: 'order:update', label: '处理订单' },
+  { value: 'staff:view', label: '查看员工' },
   { value: 'statistics:view', label: '经营概览' }
 ]
 
 const permissionText = Object.fromEntries(permissionOptions.map((item) => [item.value, item.label]))
+const permissions = readPermissions()
+const canAddStaff = permissions.includes('staff:add')
+const canUpdateStaff = permissions.includes('staff:update')
+const canDisableStaff = permissions.includes('staff:disable')
 
 const staff = ref([])
 const loading = ref(false)
@@ -126,6 +133,14 @@ const form = reactive({
   staffRole: 'CASHIER',
   permissions: [...roleDefaults.CASHIER]
 })
+
+function readPermissions() {
+  try {
+    return JSON.parse(localStorage.getItem(PERMISSIONS_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
 
 async function loadStaff() {
   loading.value = true
