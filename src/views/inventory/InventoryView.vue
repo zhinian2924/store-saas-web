@@ -74,8 +74,8 @@
 import { ref } from 'vue'
 import { Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { inventoryApi, PERMISSIONS_KEY, showApiError } from '../api'
-import { dateText, flowText, productName } from '../utils/format'
+import { inventoryApi, PERMISSIONS_KEY, showApiError } from '../../api'
+import { dateText, flowText, productName } from '../../utils/format'
 
 defineProps({
   products: { type: Array, default: () => [] },

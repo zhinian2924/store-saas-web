@@ -101,7 +101,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { authApi, showApiError } from '../api'
+import { authApi, showApiError } from '../../api'
 
 const router = useRouter()
 const formRef = ref()

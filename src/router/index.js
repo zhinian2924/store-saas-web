@@ -2,15 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { ACCOUNT_TYPE_KEY, TOKEN_KEY } from '../api'
 import DefaultLayout from '../layout/DefaultLayout.vue'
 import PlatformLayout from '../layout/PlatformLayout.vue'
-import LoginView from '../views/LoginView.vue'
-import PlatformLoginView from '../views/PlatformLoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
+import LoginView from '../views/auth/LoginView.vue'
+import PlatformLoginView from '../views/auth/PlatformLoginView.vue'
+import RegisterView from '../views/auth/RegisterView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/',
+      path: '/:view?',
       name: 'home',
       component: DefaultLayout,
       meta: { requiresAuth: true, accountType: 'STORE' }

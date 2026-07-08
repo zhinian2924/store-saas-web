@@ -126,7 +126,7 @@
 import { onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ACCOUNT_TYPE_KEY, authApi, PERMISSIONS_KEY, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
+import { ACCOUNT_TYPE_KEY, authApi, PERMISSIONS_KEY, showApiError, TOKEN_KEY, USERNAME_KEY } from '../../api'
 
 const router = useRouter()
 const smsFormRef = ref()

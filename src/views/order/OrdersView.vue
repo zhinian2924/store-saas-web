@@ -91,8 +91,8 @@
 import { computed, ref } from 'vue'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { orderApi, paymentApi, PERMISSIONS_KEY, showApiError } from '../api'
-import { dateText, money, statusText } from '../utils/format'
+import { orderApi, paymentApi, PERMISSIONS_KEY, showApiError } from '../../api'
+import { dateText, money, statusText } from '../../utils/format'
 
 const props = defineProps({
   products: { type: Array, default: () => [] },

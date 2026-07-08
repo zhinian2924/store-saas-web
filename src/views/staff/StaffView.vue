@@ -87,7 +87,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { PERMISSIONS_KEY, showApiError, staffApi } from '../api'
+import { PERMISSIONS_KEY, showApiError, staffApi } from '../../api'
 
 const roleText = {
   CASHIER: '订单专员',

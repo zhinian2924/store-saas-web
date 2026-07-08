@@ -12,16 +12,40 @@
       <div class="sidebar-divider" />
 
       <nav class="nav-list">
-        <button
-          v-for="item in nav"
-          :key="item.key"
-          type="button"
-          :class="{ active: active === item.key }"
-          @click="active = item.key"
-        >
-          <component :is="item.icon" />
-          <span>{{ item.label }}</span>
-        </button>
+        <template v-for="item in nav" :key="item.key">
+          <div v-if="item.children" class="nav-group">
+            <button
+              type="button"
+              class="nav-group-toggle"
+              :class="{ active: isGroupActive(item) }"
+              @click="toggleGroup(item.key)"
+            >
+              <component :is="item.icon" />
+              <span>{{ item.label }}</span>
+              <svg class="nav-arrow" :class="{ open: openGroups.includes(item.key) }" viewBox="0 0 20 20" width="16"><path fill="currentColor" d="M6 8l4 4 4-4" /></svg>
+            </button>
+            <div v-show="openGroups.includes(item.key)" class="nav-sub">
+              <button
+                v-for="child in item.children"
+                :key="child.key"
+                type="button"
+                :class="{ active: active === child.key }"
+                @click="navigate(child.key)"
+              >
+                <span>{{ child.label }}</span>
+              </button>
+            </div>
+          </div>
+          <button
+            v-else
+            type="button"
+            :class="{ active: active === item.key }"
+            @click="navigate(item.key)"
+          >
+            <component :is="item.icon" />
+            <span>{{ item.label }}</span>
+          </button>
+        </template>
       </nav>
     </aside>
 
@@ -50,11 +74,13 @@
           :orders="orders"
           :flows="flows"
         />
-        <ProductsView
+        <CategoryView
+          v-if="active === 'categories'"
+          :reload-key="catalogReloadKey"
+        />
+        <ProductListView
           v-if="active === 'products'"
-          :categories="categories"
-          :products="products"
-          @refresh="loadCatalog"
+          :reload-key="catalogReloadKey"
         />
         <StoreProfileView
           v-if="active === 'store'"
@@ -97,36 +123,104 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Box, Goods, Refresh, Shop, ShoppingCart, SwitchButton, TrendCharts, User } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ACCOUNT_TYPE_KEY, authApi, inventoryApi, orderApi, PERMISSIONS_KEY, productApi, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
-import DashboardView from '../views/DashboardView.vue'
-import InventoryView from '../views/InventoryView.vue'
-import OrdersView from '../views/OrdersView.vue'
-import ProductsView from '../views/ProductsView.vue'
-import StaffView from '../views/StaffView.vue'
-import StoreProfileView from '../views/StoreProfileView.vue'
+import DashboardView from '../views/dashboard/DashboardView.vue'
+import InventoryView from '../views/inventory/InventoryView.vue'
+import OrdersView from '../views/order/OrdersView.vue'
+import CategoryView from '../views/product/CategoryView.vue'
+import ProductListView from '../views/product/ProductListView.vue'
+import StaffView from '../views/staff/StaffView.vue'
+import StoreProfileView from '../views/store/StoreProfileView.vue'
 
 const allNav = [
   { key: 'dashboard', label: '经营概览', subtitle: '门店商品、库存、订单的实时经营视图', icon: TrendCharts, any: ['product:view', 'inventory:view', 'order:view'] },
   { key: 'store', label: '门店信息', subtitle: '维护门店名称、地址、营业时间和 LOGO', icon: Shop, permission: 'store:view' },
-  { key: 'products', label: '商品管理', subtitle: '维护分类、商品档案、售价和初始库存', icon: Goods, permission: 'product:view' },
+  {
+    key: 'product-mgr', label: '商品管理', icon: Goods, permission: 'product:view', children: [
+      { key: 'categories', label: '分类管理', subtitle: '商品分类维护' },
+      { key: 'products', label: '商品列表', subtitle: '商品档案、售价和库存管理' }
+    ]
+  },
   { key: 'inventory', label: '库存管理', subtitle: '处理入库、报损、盘点和库存流水追踪', icon: Box, permission: 'inventory:view' },
   { key: 'orders', label: '订单管理', subtitle: '创建门店订单、查看明细并完成模拟支付', icon: ShoppingCart, permission: 'order:view' },
   { key: 'staff', label: '员工管理', subtitle: '创建店员账号，按岗位授权并控制启停状态', icon: User, permission: 'staff:view' }
 ]
 
-const active = ref('dashboard')
+const nav = computed(() => allNav.filter((item) => canOpen(item)))
+const openGroups = ref(['product-mgr'])
+
+function findItem(key) {
+  for (const item of nav.value) {
+    if (item.key === key) return item
+    if (item.children) {
+      const child = item.children.find(c => c.key === key)
+      if (child) return child
+    }
+  }
+  return null
+}
+
+function isGroupActive(item) {
+  return item.children?.some(c => c.key === active.value)
+}
+
+function toggleGroup(key) {
+  const idx = openGroups.value.indexOf(key)
+  if (idx >= 0) {
+    openGroups.value.splice(idx, 1)
+  } else {
+    openGroups.value.push(key)
+  }
+}
+
+const route = useRoute()
+const router = useRouter()
+
+const active = ref(route.params.view || 'dashboard')
+
+watch(() => route.params.view, (view) => {
+  if (view && findItem(view)) {
+    active.value = view
+  } else if (!view) {
+    active.value = 'dashboard'
+  }
+}, { immediate: true })
+
+watch(active, (key) => {
+  for (const item of nav.value) {
+    if (item.children && item.children.some(c => c.key === key)) {
+      if (!openGroups.value.includes(item.key)) {
+        openGroups.value.push(item.key)
+      }
+    }
+  }
+})
+
+const currentNav = computed(() => findItem(active.value) || nav.value[0] || allNav[0])
+const currentTitle = computed(() => currentNav.value?.label || '')
+const currentSubtitle = computed(() => currentNav.value?.subtitle || '')
+
+function navigate(key) {
+  if (key === 'dashboard') {
+    router.push({ name: 'home' })
+  } else {
+    router.push({ params: { view: key } })
+  }
+}
+
 const username = ref(localStorage.getItem(USERNAME_KEY) || '')
 const permissions = ref(readPermissions())
 const loading = ref(false)
 const firstLoaded = ref(false)
-const categories = ref([])
 const products = ref([])
 const flows = ref([])
 const orders = ref([])
 const storeReloadKey = ref(0)
+const catalogReloadKey = ref(0)
 const accountDialogVisible = ref(false)
 const accountSaving = ref(false)
 const accountForm = reactive({
@@ -134,11 +228,6 @@ const accountForm = reactive({
   nickname: '',
   password: ''
 })
-
-const nav = computed(() => allNav.filter((item) => canOpen(item)))
-const currentNav = computed(() => nav.value.find((item) => item.key === active.value) || nav.value[0] || allNav[0])
-const currentTitle = computed(() => currentNav.value.label)
-const currentSubtitle = computed(() => currentNav.value.subtitle)
 
 function readPermissions() {
   try {
@@ -211,20 +300,6 @@ async function saveAccount() {
   }
 }
 
-async function loadCatalog() {
-  loading.value = true
-  try {
-    if (!hasPermission('product:view')) return
-    const [nextCategories, nextProducts] = await Promise.all([productApi.listCategories(), productApi.listProducts()])
-    categories.value = nextCategories || []
-    products.value = nextProducts || []
-  } catch (error) {
-    showApiError(error)
-  } finally {
-    loading.value = false
-  }
-}
-
 async function loadInventory() {
   loading.value = true
   try {
@@ -260,13 +335,11 @@ async function loadOrdersAndCatalog() {
 async function loadAll() {
   loading.value = true
   try {
-    const [nextCategories, nextProducts, nextFlows, nextOrders] = await Promise.all([
-      hasPermission('product:view') ? productApi.listCategories() : Promise.resolve([]),
+    const [nextProducts, nextFlows, nextOrders] = await Promise.all([
       hasPermission('product:view') ? productApi.listProducts() : Promise.resolve([]),
       hasPermission('inventory:view') ? inventoryApi.listFlows() : Promise.resolve([]),
       hasPermission('order:view') ? orderApi.listOrders() : Promise.resolve([])
     ])
-    categories.value = nextCategories || []
     products.value = nextProducts || []
     flows.value = nextFlows || []
     orders.value = nextOrders || []
@@ -283,12 +356,17 @@ function refreshCurrent() {
     storeReloadKey.value += 1
     return
   }
+  if (active.value === 'categories' || active.value === 'products') {
+    catalogReloadKey.value += 1
+    return
+  }
   loadAll()
 }
 
 onMounted(() => {
-  if (!nav.value.some((item) => item.key === active.value) && nav.value.length > 0) {
-    active.value = nav.value[0].key
+  if (!findItem(active.value) && nav.value.length > 0) {
+    const first = nav.value[0]
+    active.value = first.children?.[0]?.key || first.key
   }
   loadAll()
 })

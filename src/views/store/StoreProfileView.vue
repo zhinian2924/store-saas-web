@@ -42,7 +42,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { PERMISSIONS_KEY, showApiError, storeApi } from '../api'
+import { PERMISSIONS_KEY, showApiError, storeApi } from '../../api'
 
 const props = defineProps({
   reloadKey: { type: Number, default: 0 }

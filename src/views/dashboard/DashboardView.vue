@@ -65,7 +65,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { dateText, flowText, money } from '../utils/format'
+import { dateText, flowText, money } from '../../utils/format'
 
 const props = defineProps({
   products: { type: Array, default: () => [] },

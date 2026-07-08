@@ -73,7 +73,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ACCOUNT_TYPE_KEY, authApi, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
+import { ACCOUNT_TYPE_KEY, authApi, showApiError, TOKEN_KEY, USERNAME_KEY } from '../../api'
 
 const router = useRouter()
 const formRef = ref()

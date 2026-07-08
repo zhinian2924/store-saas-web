@@ -163,6 +163,96 @@ textarea {
   pointer-events: none;
 }
 
+.nav-list .nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-list .nav-group-toggle {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 13px;
+  color: #bfccdc;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+  width: 100%;
+}
+
+.nav-list .nav-group-toggle.active,
+.nav-list .nav-group-toggle:hover {
+  background: #24344f;
+  color: #fff;
+}
+
+.nav-list .nav-group-toggle:hover {
+  transform: translateX(2px);
+}
+
+.nav-list .nav-arrow {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  opacity: 0.5;
+}
+
+.nav-list .nav-arrow.open {
+  transform: rotate(180deg);
+}
+
+.nav-list .nav-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 20px;
+}
+
+.nav-list .nav-sub button {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 13px;
+  color: #9eabbc;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.16s ease, color 0.16s ease;
+  font-size: 0.9em;
+}
+
+.nav-list .nav-sub button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f6f8fb;
+}
+
+.nav-list .nav-sub button.active {
+  color: #36c28a;
+}
+
+.nav-list .nav-sub button.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 16px;
+  border-radius: 0 3px 3px 0;
+  background: #36c28a;
+  transform: translateY(-50%);
+  box-shadow: 0 0 6px rgba(54, 194, 138, 0.4);
+  pointer-events: none;
+}
+
 .main {
   min-width: 0;
   padding: 26px;
