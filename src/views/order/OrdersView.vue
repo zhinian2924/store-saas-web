@@ -13,7 +13,7 @@
         <div v-for="(line, index) in orderLines" :key="line.key" class="order-line">
           <el-select v-model="line.productId" filterable placeholder="选择商品" @change="syncLineProduct(line)">
             <el-option
-              v-for="item in products"
+            v-for="item in sellableProducts"
               :key="item.id"
               :label="`${item.name} · ¥${money(item.price)} · 库存 ${item.stock}`"
               :value="item.id"
@@ -110,6 +110,7 @@ const orderLines = ref([newLine()])
 const canUpdateOrder = readPermissions().includes('order:update')
 
 const orderTotal = computed(() => orderLines.value.reduce((sum, line) => sum + lineAmount(line), 0))
+const sellableProducts = computed(() => props.products.filter(item => item.status === 1))
 
 function readPermissions() {
   try {
