@@ -101,15 +101,23 @@
           v-if="active === 'store'"
           :reload-key="storeReloadKey"
         />
-        <InventoryView
-          v-if="active === 'inventory'"
+        <InventoryAdjustView
+          v-if="active === 'inventory-adjust'"
           :products="products"
-          :flows="flows"
           @refresh="loadInventory"
         />
-        <OrdersView
-          v-if="active === 'orders'"
+        <InventoryFlowView
+          v-if="active === 'inventory-flows'"
           :products="products"
+          :flows="flows"
+        />
+        <OrderCreateView
+          v-if="active === 'order-create'"
+          :products="products"
+          @refresh="loadOrdersAndCatalog"
+        />
+        <OrderListView
+          v-if="active === 'order-list'"
           :orders="orders"
           @refresh="loadOrdersAndCatalog"
         />
@@ -169,8 +177,10 @@ import {
   USERNAME_KEY,
 } from "../api";
 import DashboardView from "../views/dashboard/DashboardView.vue";
-import InventoryView from "../views/inventory/InventoryView.vue";
-import OrdersView from "../views/order/OrdersView.vue";
+import InventoryAdjustView from "../views/inventory/InventoryAdjustView.vue";
+import InventoryFlowView from "../views/inventory/InventoryFlowView.vue";
+import OrderCreateView from "../views/order/OrderCreateView.vue";
+import OrderListView from "../views/order/OrderListView.vue";
 import CategoryView from "../views/product/CategoryView.vue";
 import ProductListView from "../views/product/ProductListView.vue";
 import StaffView from "../views/staff/StaffView.vue";
@@ -206,18 +216,24 @@ const allNav = [
     ],
   },
   {
-    key: "inventory",
+    key: "inventory-mgr",
     label: "库存管理",
-    subtitle: "处理入库、报损、盘点和库存流水追踪",
     icon: Box,
     permission: "inventory:view",
+    children: [
+      { key: "inventory-adjust", label: "库存调整", subtitle: "采购入库、报损出库、盘盈和盘亏" },
+      { key: "inventory-flows", label: "库存流水", subtitle: "按最新流水倒序展示" },
+    ],
   },
   {
-    key: "orders",
+    key: "orders-mgr",
     label: "订单管理",
-    subtitle: "创建门店订单、查看明细并完成模拟支付",
     icon: ShoppingCart,
     permission: "order:view",
+    children: [
+      { key: "order-create", label: "创建订单", subtitle: "创建门店订单，支持多商品" },
+      { key: "order-list", label: "订单列表", subtitle: "查看订单明细并模拟支付" },
+    ],
   },
   {
     key: "staff",
