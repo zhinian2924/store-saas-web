@@ -56,22 +56,23 @@
                   placeholder="6 位验证码"
                   autocomplete="one-time-code"
                 />
-                <el-button :disabled="countdown > 0" :loading="sendingCode" @click="sendCode">
-                  {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+                <el-button
+                  :disabled="countdown > 0"
+                  :loading="sendingCode"
+                  @click="sendCode"
+                >
+                  {{ countdown > 0 ? `${countdown}s` : "获取验证码" }}
                 </el-button>
               </div>
             </el-form-item>
 
-            <el-alert
-              v-if="debugCode"
-              class="debug-code"
-              type="success"
-              :closable="false"
-              show-icon
-              :title="`开发验证码：${debugCode}`"
-            />
-
-            <el-button class="auth-submit" type="primary" size="large" :loading="submitting" @click="loginBySms">
+            <el-button
+              class="auth-submit"
+              type="primary"
+              size="large"
+              :loading="submitting"
+              @click="loginBySms"
+            >
               登录
             </el-button>
           </el-form>
@@ -104,13 +105,18 @@
               />
             </el-form-item>
 
-            <el-button class="auth-submit" type="primary" size="large" :loading="submitting" @click="loginByPassword">
+            <el-button
+              class="auth-submit"
+              type="primary"
+              size="large"
+              :loading="submitting"
+              @click="loginByPassword"
+            >
               登录
             </el-button>
           </el-form>
         </el-tab-pane>
       </el-tabs>
-
 
       <div class="auth-switch">
         没有账号？
@@ -118,121 +124,143 @@
       </div>
     </div>
 
-    <RouterLink to="/platform/login" class="platform-entry">平台管理后台</RouterLink>
+    <RouterLink to="/platform/login" class="platform-entry"
+      >平台管理后台</RouterLink
+    >
   </section>
 </template>
 
 <script setup>
-import { onBeforeUnmount, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { ACCOUNT_TYPE_KEY, authApi, PERMISSIONS_KEY, showApiError, TOKEN_KEY, USERNAME_KEY } from '../../api'
+import { onBeforeUnmount, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import {
+  ACCOUNT_TYPE_KEY,
+  authApi,
+  PERMISSIONS_KEY,
+  showApiError,
+  TOKEN_KEY,
+  USERNAME_KEY,
+} from "../../api";
 
-const router = useRouter()
-const smsFormRef = ref()
-const passwordFormRef = ref()
-const submitting = ref(false)
-const sendingCode = ref(false)
-const countdown = ref(0)
-const debugCode = ref('')
-const loginMode = ref('sms')
-let countdownTimer
+const router = useRouter();
+const smsFormRef = ref();
+const passwordFormRef = ref();
+const submitting = ref(false);
+const sendingCode = ref(false);
+const countdown = ref(0);
+const loginMode = ref("sms");
+let countdownTimer;
 
 const smsForm = reactive({
-  mobile: '13800000000',
-  code: ''
-})
+  mobile: "",
+  code: "",
+});
 const passwordForm = reactive({
-  mobile: '',
-  password: ''
-})
+  mobile: "",
+  password: "",
+});
 
-const requiredMessage = '请填写完整登录信息'
+const requiredMessage = "请填写完整登录信息";
 const mobileRules = [
-  { required: true, message: '请输入手机号', trigger: 'blur' },
-  { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
-]
+  { required: true, message: "请输入手机号", trigger: "blur" },
+  { pattern: /^1[3-9]\d{9}$/, message: "手机号格式不正确", trigger: "blur" },
+];
 const smsRules = {
   mobile: mobileRules,
-  code: [{ required: true, message: requiredMessage, trigger: 'blur' }]
-}
+  code: [{ required: true, message: requiredMessage, trigger: "blur" }],
+};
 const passwordRules = {
   mobile: mobileRules,
-  password: [{ required: true, message: requiredMessage, trigger: 'blur' }]
-}
+  password: [{ required: true, message: requiredMessage, trigger: "blur" }],
+};
 
 async function sendCode() {
-  if (countdown.value > 0 || sendingCode.value) return
-  const valid = await smsFormRef.value?.validateField('mobile').then(() => true).catch(() => false)
-  if (!valid) return
+  if (countdown.value > 0 || sendingCode.value) return;
+  const valid = await smsFormRef.value
+    ?.validateField("mobile")
+    .then(() => true)
+    .catch(() => false);
+  if (!valid) return;
 
-  sendingCode.value = true
+  sendingCode.value = true;
   try {
-    const response = await authApi.sendStoreSmsCode({ mobile: smsForm.mobile })
-    debugCode.value = response.debugCode || ''
-    if (debugCode.value) {
-      smsForm.code = debugCode.value
-    }
-    ElMessage.success('验证码已生成')
-    startCountdown(response.expireSeconds || 300)
+    const response = await authApi.sendStoreSmsCode({ mobile: smsForm.mobile });
+    ElMessage.success("验证码已生成");
+    startCountdown(response.expireSeconds || 300);
   } catch (error) {
-    showApiError(error)
+    showApiError(error);
   } finally {
-    sendingCode.value = false
+    sendingCode.value = false;
   }
 }
 
 async function loginBySms() {
-  if (submitting.value) return
-  const valid = await smsFormRef.value?.validate().catch(() => false)
-  if (!valid) return
+  if (submitting.value) return;
+  const valid = await smsFormRef.value?.validate().catch(() => false);
+  if (!valid) return;
 
-  submitting.value = true
+  submitting.value = true;
   try {
-    await saveSession(authApi.login({ mobile: smsForm.mobile, code: smsForm.code, loginType: 'sms' }))
+    await saveSession(
+      authApi.login({
+        mobile: smsForm.mobile,
+        code: smsForm.code,
+        loginType: "sms",
+      }),
+    );
   } catch (error) {
-    showApiError(error)
+    showApiError(error);
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
 }
 
 async function loginByPassword() {
-  if (submitting.value) return
-  const valid = await passwordFormRef.value?.validate().catch(() => false)
-  if (!valid) return
+  if (submitting.value) return;
+  const valid = await passwordFormRef.value?.validate().catch(() => false);
+  if (!valid) return;
 
-  submitting.value = true
+  submitting.value = true;
   try {
-    await saveSession(authApi.login({ mobile: passwordForm.mobile, password: passwordForm.password, loginType: 'password' }))
+    await saveSession(
+      authApi.login({
+        mobile: passwordForm.mobile,
+        password: passwordForm.password,
+        loginType: "password",
+      }),
+    );
   } catch (error) {
-    showApiError(error)
+    showApiError(error);
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
 }
 
 async function saveSession(sessionPromise) {
-  const session = await sessionPromise
-  localStorage.setItem(TOKEN_KEY, session.tokenValue)
-  localStorage.setItem(USERNAME_KEY, session.username)
-  localStorage.setItem(ACCOUNT_TYPE_KEY, 'STORE')
-  localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(session.permissions || []))
-  await router.push('/')
+  const session = await sessionPromise;
+  localStorage.setItem(TOKEN_KEY, session.tokenValue);
+  localStorage.setItem(USERNAME_KEY, session.username);
+  localStorage.setItem(ACCOUNT_TYPE_KEY, "STORE");
+  localStorage.setItem(
+    PERMISSIONS_KEY,
+    JSON.stringify(session.permissions || []),
+  );
+  await router.push("/");
 }
 
 function startCountdown(seconds) {
-  window.clearInterval(countdownTimer)
-  countdown.value = Math.min(seconds, 60)
+  window.clearInterval(countdownTimer);
+  countdown.value = Math.min(seconds, 60);
   countdownTimer = window.setInterval(() => {
-    countdown.value -= 1
+    countdown.value -= 1;
     if (countdown.value <= 0) {
-      window.clearInterval(countdownTimer)
+      window.clearInterval(countdownTimer);
     }
-  }, 1000)
+  }, 1000);
 }
 
 onBeforeUnmount(() => {
-  window.clearInterval(countdownTimer)
-})
+  window.clearInterval(countdownTimer);
+});
 </script>

@@ -63,22 +63,31 @@
           <p>{{ currentSubtitle }}</p>
         </div>
         <div class="session">
-          <el-button
-            class="session-action"
-            :icon="Refresh"
-            @click="refreshCurrent"
-            :loading="loading"
-            >刷新</el-button
-          >
-          <span class="session-divider" />
-          <button class="session-account" type="button" @click="openAccount">
-            <span class="session-account-name">{{ username }}</span>
-            <span class="session-account-label">账号设置</span>
-          </button>
-          <span class="session-divider" />
-          <el-button class="session-logout" :icon="SwitchButton" @click="logout"
-            >退出</el-button
-          >
+          <el-tooltip content="刷新当前页面" placement="bottom">
+            <el-button
+              class="session-action"
+              :icon="Refresh"
+              circle
+              aria-label="刷新当前页面"
+              @click="refreshCurrent"
+              :loading="loading"
+            />
+          </el-tooltip>
+          <el-dropdown trigger="click" popper-class="account-dropdown" @command="handleAccountCommand">
+            <button class="session-account" type="button" aria-label="打开账号菜单">
+              <el-avatar class="session-avatar" :size="36">{{ avatarInitial }}</el-avatar>
+              <span class="session-account-meta">
+                <span class="session-account-name">{{ nickname || "门店管理员" }}</span>
+                <span class="session-account-label">门店管理员</span>
+              </span>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="account">账号设置</el-dropdown-item>
+                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </header>
 
@@ -159,7 +168,6 @@ import {
   Refresh,
   Shop,
   ShoppingCart,
-  SwitchButton,
   TrendCharts,
   User,
 } from "@element-plus/icons-vue";
@@ -321,7 +329,10 @@ function navigate(key) {
   }
 }
 
-const username = ref(localStorage.getItem(USERNAME_KEY) || "");
+const nickname = ref("");
+const avatarInitial = computed(
+  () => nickname.value.trim().slice(0, 1).toUpperCase() || "店",
+);
 const loading = ref(false);
 const firstLoaded = ref(false);
 const products = ref([]);
@@ -347,6 +358,14 @@ function canOpen(item) {
   return true;
 }
 
+function handleAccountCommand(command) {
+  if (command === "account") {
+    openAccount();
+    return;
+  }
+  logout();
+}
+
 async function logout() {
   try {
     await authApi.logout();
@@ -357,7 +376,7 @@ async function logout() {
     localStorage.removeItem(USERNAME_KEY);
     localStorage.removeItem(ACCOUNT_TYPE_KEY);
     localStorage.removeItem(PERMISSIONS_KEY);
-    username.value = "";
+    nickname.value = "";
     active.value = "dashboard";
     window.location.href = "/login";
   }
@@ -373,6 +392,7 @@ async function openAccount() {
       nickname: profile?.nickname || profile?.username || "",
       password: "",
     });
+    nickname.value = profile?.nickname || "";
   } catch (error) {
     showApiError(error);
   }
@@ -389,8 +409,7 @@ async function saveAccount() {
       nickname: accountForm.nickname,
       password: accountForm.password,
     });
-    username.value = profile?.nickname || profile?.username || username.value;
-    localStorage.setItem(USERNAME_KEY, username.value);
+    nickname.value = profile?.nickname || "";
     accountDialogVisible.value = false;
     ElMessage.success("账号信息已更新");
   } catch (error) {
@@ -478,6 +497,14 @@ onMounted(() => {
     const first = nav.value[0];
     active.value = first.children?.[0]?.key || first.key;
   }
+  loadNickname();
   loadAll();
 });
+
+async function loadNickname() {
+  try {
+    const profile = await authApi.me();
+    nickname.value = profile?.nickname || "";
+  } catch {}
+}
 </script>
