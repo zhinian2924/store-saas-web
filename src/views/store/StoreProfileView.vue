@@ -49,6 +49,7 @@
   >
     <el-form :model="dialogForm" label-position="top" class="store-dialog-form">
       <div class="store-dialog-logo">
+        <input ref="uploadInput" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" @change="handleUpload" />
         <div class="store-logo-box store-dialog-logo-box" :class="{ 'is-empty': !dialogForm.logoUrl }" @click="triggerUpload">
           <el-image v-if="dialogForm.logoUrl" :src="dialogForm.logoUrl" fit="cover">
             <template #error>
@@ -58,7 +59,7 @@
           <div v-else class="logo-fallback">{{ dialogInitials }}</div>
           <div class="store-logo-overlay">
             <el-icon :size="20"><Camera /></el-icon>
-            <span>{{ dialogForm.logoUrl ? '更换图片' : '上传图片' }}</span>
+            <span>{{ uploading ? '上传中...' : (dialogForm.logoUrl ? '更换图片' : '上传图片') }}</span>
           </div>
         </div>
         <p class="store-logo-hint">支持 JPG/PNG，建议 512×512px</p>
@@ -121,6 +122,7 @@ const dialogForm = reactive({
 });
 const saving = ref(false);
 const uploading = ref(false);
+const uploadInput = ref(null);
 const dialogVisible = ref(false);
 const canUpdateStore = readPermissions().includes("store:update");
 
@@ -137,6 +139,23 @@ function readPermissions() {
 
 function triggerUpload() {
   if (!canUpdateStore) return;
+  uploadInput.value?.click();
+}
+
+async function handleUpload(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  uploading.value = true;
+  try {
+    const result = await storeApi.uploadLogo(file);
+    dialogForm.logoUrl = result?.url || "";
+    ElMessage.success("图片上传成功");
+  } catch (error) {
+    showApiError(error);
+  } finally {
+    uploading.value = false;
+  }
 }
 
 function openDialog() {

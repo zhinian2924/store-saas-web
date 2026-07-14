@@ -19,6 +19,12 @@ export const productApi = {
   updateProduct(id, payload) {
     return api.put(`/store/products/${id}`, payload)
   },
+  uploadImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('scene', 'product')
+    return api.post('/store/media/images', formData)
+  },
   setProductStatus(id, status) {
     return api.put(`/store/products/${id}/status`, { status })
   },

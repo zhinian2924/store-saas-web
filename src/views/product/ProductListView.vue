@@ -140,59 +140,78 @@
       align-center
       destroy-on-close
     >
-      <div class="product-dialog-layout">
-        <aside class="product-dialog-aside">
+      <div class="product-dialog-body">
+        <div class="product-dialog-header">
           <span class="dialog-kicker">商品档案</span>
-          <strong>{{
-            editingProduct ? "调整商品售卖信息" : "创建新的商品资料"
-          }}</strong>
-          <p>这里维护名称、分类、售价、图片和售卖状态。</p>
-          <small
-            >库存数量请到库存管理中调整，避免商品资料和库存流水混在一起。</small
-          >
-        </aside>
+          <div class="product-dialog-header-text">
+            <h3>{{ editingProduct ? "编辑商品" : "新增商品" }}</h3>
+            <p>维护名称、分类、售价、图片和售卖状态。库存数量请到库存管理中调整。</p>
+          </div>
+        </div>
         <el-form :model="form" class="product-dialog-form" label-position="top">
-          <el-form-item label="商品名称" class="span-2">
+          <el-form-item label="商品名称">
             <el-input
               v-model.trim="form.name"
               maxlength="80"
               placeholder="例如 拿铁咖啡"
             />
           </el-form-item>
-          <el-form-item label="分类">
-            <el-select
-              v-model="form.categoryId"
-              clearable
-              placeholder="选择分类"
-            >
-              <el-option
-                v-for="item in categories"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
+          <div class="form-row-3">
+            <el-form-item label="分类">
+              <el-select
+                v-model="form.categoryId"
+                clearable
+                placeholder="选择分类"
+              >
+                <el-option
+                  v-for="item in categories"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="状态">
+              <el-select v-model="formStatus" placeholder="选择状态">
+                <el-option
+                  v-for="item in productStatusOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="售价（元）">
+              <el-input-number
+                v-model="form.price"
+                :precision="2"
+                :step="1"
+                :min="0.01"
+                controls-position="right"
               />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-select v-model="formStatus" placeholder="选择状态">
-              <el-option
-                v-for="item in productStatusOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="售价">
-            <el-input-number
-              v-model="form.price"
-              :precision="2"
-              :step="1"
-              :min="0.01"
-            />
-          </el-form-item>
-          <el-form-item label="图片 URL" class="span-2">
-            <el-input v-model.trim="form.imageUrl" placeholder="可选" />
+            </el-form-item>
+          </div>
+          <el-form-item label="商品主图">
+            <input ref="uploadInput" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" @change="handleImageUpload" />
+            <div class="product-image-upload">
+              <div class="product-image-area">
+                <template v-if="form.imageUrl">
+                  <el-image :src="form.imageUrl" fit="cover" class="product-image-preview" />
+                  <el-button type="primary" text :icon="Upload" :loading="uploading" @click="triggerImageUpload">
+                    更换图片
+                  </el-button>
+                </template>
+                <template v-else>
+                  <div class="product-image-placeholder">
+                    <span>点击上传商品图片</span>
+                    <small>支持 JPG / PNG / WebP，建议比例 1:1</small>
+                  </div>
+                  <el-button type="primary" plain :icon="Upload" :loading="uploading" @click="triggerImageUpload">
+                    上传图片
+                  </el-button>
+                </template>
+              </div>
+            </div>
           </el-form-item>
         </el-form>
       </div>
@@ -210,7 +229,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import { Plus } from "@element-plus/icons-vue";
+import { Plus, Upload } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { PERMISSIONS_KEY, productApi, showApiError } from "../../api";
 import { categoryName, dateText, money } from "../../utils/format";
@@ -223,6 +242,8 @@ const props = defineProps({
 const categories = ref([]);
 const products = ref([]);
 const saving = ref(false);
+const uploading = ref(false);
+const uploadInput = ref(null);
 const drawerVisible = ref(false);
 const editingProduct = ref(null);
 const formStatus = ref(1);
@@ -315,6 +336,26 @@ function openEdit(product) {
     price: Number(product.price || 0),
   };
   drawerVisible.value = true;
+}
+
+async function handleImageUpload(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  uploading.value = true;
+  try {
+    const result = await productApi.uploadImage(file);
+    form.value.imageUrl = result?.url || "";
+    ElMessage.success("图片上传成功");
+  } catch (error) {
+    showApiError(error);
+  } finally {
+    uploading.value = false;
+  }
+}
+
+function triggerImageUpload() {
+  uploadInput.value?.click();
 }
 
 async function saveProduct() {
