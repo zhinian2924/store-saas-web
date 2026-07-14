@@ -4,6 +4,15 @@ export const platformApi = {
   listTenants(params = {}) {
     return api.get('/platform/tenants', { params })
   },
+  updateTenant(id, payload) {
+    return api.put(`/platform/tenants/${id}`, payload)
+  },
+  setTenantStatus(id, status) {
+    return api.put(`/platform/tenants/${id}/status`, { status })
+  },
+  deleteTenant(id) {
+    return api.delete(`/platform/tenants/${id}`)
+  },
   approveTenant(id) {
     return api.post(`/platform/tenants/${id}/approve`)
   },
