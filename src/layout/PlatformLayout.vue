@@ -87,7 +87,7 @@
             <el-table-column prop="updatedAt" label="更新时间" min-width="170">
               <template #default="{ row }">{{ dateTime(row.updatedAt) }}</template>
             </el-table-column>
-            <el-table-column label="操作" width="330" fixed="right">
+            <el-table-column label="操作" width="430" fixed="right">
               <template #default="{ row }">
                 <div class="row-actions">
                   <el-button
@@ -115,6 +115,12 @@
                     :icon="Edit"
                     @click="openEdit(row)"
                   >编辑</el-button>
+                  <el-button
+                    v-if="section === 'tenants'"
+                    size="small"
+                    :icon="Setting"
+                    @click="openMiniappConfig(row)"
+                  >小程序</el-button>
                   <el-button
                     v-if="section === 'tenants' && row.status === TENANT_STATUS.ACTIVE"
                     size="small"
@@ -152,13 +158,52 @@
         <el-button type="primary" :loading="workingAction === 'edit'" @click="saveEdit">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="miniappVisible" title="小程序技术配置" width="500px" :close-on-click-modal="false">
+      <el-form :model="miniappForm" label-position="top">
+        <el-form-item label="绑定租户">
+          <el-input :model-value="miniappForm.tenantName" disabled />
+        </el-form-item>
+        <el-form-item label="AppID" required>
+          <el-input v-model.trim="miniappForm.appId" maxlength="18" placeholder="wx..." />
+        </el-form-item>
+        <el-form-item label="AppSecret" :required="!miniappForm.secretConfigured">
+          <el-input
+            v-model.trim="miniappForm.appSecret"
+            show-password
+            autocomplete="new-password"
+            :placeholder="miniappForm.secretConfigured ? '已配置，留空保持不变' : '请输入AppSecret'"
+          />
+        </el-form-item>
+        <el-alert
+          :title="miniappForm.secretConfigured ? 'AppSecret 已加密保存，平台端不可查看原文' : '尚未配置 AppSecret'"
+          :type="miniappForm.secretConfigured ? 'success' : 'warning'"
+          :closable="false"
+          show-icon
+        />
+        <el-form-item v-if="miniappForm.status !== null" label="配置状态" class="miniapp-status-field">
+          <el-switch
+            :model-value="miniappForm.status === MINIAPP_STATUS.ENABLED"
+            inline-prompt
+            active-text="启"
+            inactive-text="停"
+            :loading="miniappStatusSaving"
+            @change="changeMiniappStatus"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="miniappVisible = false">取消</el-button>
+        <el-button type="primary" :loading="miniappSaving" @click="saveMiniappConfig">保存配置</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, Edit, OfficeBuilding, Refresh, SwitchButton } from '@element-plus/icons-vue'
+import { Delete, Edit, OfficeBuilding, Refresh, Setting, SwitchButton } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ACCOUNT_TYPE_KEY, authApi, platformApi, showApiError, TOKEN_KEY, USERNAME_KEY } from '../api'
 
@@ -168,6 +213,7 @@ const TENANT_STATUS = {
   PENDING: 2,
   REJECTED: 3
 }
+const MINIAPP_STATUS = { DISABLED: 0, ENABLED: 1 }
 
 const statusOptions = [
   { label: '全部', value: '' },
@@ -193,6 +239,10 @@ const workingAction = ref('')
 const statusFilter = ref('')
 const editVisible = ref(false)
 const editForm = ref({ id: null, name: '', tenantCode: '' })
+const miniappVisible = ref(false)
+const miniappSaving = ref(false)
+const miniappStatusSaving = ref(false)
+const miniappForm = ref({ tenantId: null, tenantName: '', appId: '', appSecret: '', secretConfigured: false, status: null })
 const currentStatusOptions = computed(() => section.value === 'review' ? statusOptions : managementStatusOptions)
 
 const pendingCount = computed(() => tenants.value.filter((item) => item.status === TENANT_STATUS.PENDING).length)
@@ -305,6 +355,66 @@ async function saveEdit() {
     showApiError(error)
   } finally {
     workingAction.value = ''
+  }
+}
+
+async function openMiniappConfig(row) {
+  miniappForm.value = { tenantId: row.id, tenantName: row.name, appId: '', appSecret: '', secretConfigured: false, status: null }
+  miniappVisible.value = true
+  try {
+    const config = await platformApi.miniappConfig(row.id)
+    Object.assign(miniappForm.value, {
+      appId: config?.appId || '',
+      secretConfigured: !!config?.secretConfigured,
+      status: config?.status ?? null
+    })
+  } catch (error) {
+    showApiError(error)
+  }
+}
+
+async function saveMiniappConfig() {
+  const form = miniappForm.value
+  if (!/^wx[a-zA-Z0-9]{16}$/.test(form.appId)) {
+    ElMessage.warning('请输入正确的18位小程序AppID')
+    return
+  }
+  if (!form.secretConfigured && !form.appSecret) {
+    ElMessage.warning('首次配置必须填写AppSecret')
+    return
+  }
+  miniappSaving.value = true
+  try {
+    const config = await platformApi.saveMiniappConfig(form.tenantId, {
+      appId: form.appId,
+      appSecret: form.appSecret
+    })
+    Object.assign(form, {
+      appSecret: '',
+      secretConfigured: !!config?.secretConfigured,
+      status: config?.status ?? MINIAPP_STATUS.ENABLED
+    })
+    ElMessage.success('小程序配置已保存')
+  } catch (error) {
+    showApiError(error)
+  } finally {
+    miniappSaving.value = false
+  }
+}
+
+async function changeMiniappStatus(enabled) {
+  const previous = miniappForm.value.status
+  miniappStatusSaving.value = true
+  try {
+    const status = enabled ? MINIAPP_STATUS.ENABLED : MINIAPP_STATUS.DISABLED
+    const config = await platformApi.setMiniappConfigStatus(miniappForm.value.tenantId, status)
+    miniappForm.value.status = config?.status ?? status
+    ElMessage.success(enabled ? '小程序配置已启用' : '小程序配置已停用')
+  } catch (error) {
+    miniappForm.value.status = previous
+    showApiError(error)
+  } finally {
+    miniappStatusSaving.value = false
   }
 }
 

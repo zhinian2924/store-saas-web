@@ -1,7 +1,7 @@
 <template>
   <div class="store-profile">
     <section class="panel store-hero-card">
-      <div class="store-hero-bg" />
+      <div class="store-hero-bg" :style="{ backgroundColor: form.themeColor }" />
       <div class="store-hero-content">
         <div class="store-hero-logo">
           <div class="store-logo-box" :class="{ 'is-empty': !form.logoUrl }">
@@ -26,6 +26,10 @@
             <div v-if="form.businessHours" class="store-hero-meta-item">
               <el-icon><Clock /></el-icon>
               <span>{{ form.businessHours }}</span>
+            </div>
+            <div class="store-hero-meta-item">
+              <span class="theme-swatch" :style="{ backgroundColor: form.themeColor }" />
+              <span>小程序主题色 {{ form.themeColor }}</span>
             </div>
           </div>
           <div v-if="!form.address && !form.businessHours" class="store-hero-meta-empty">
@@ -90,6 +94,12 @@
           placeholder="例如 上海市浦东新区示例路 100 号"
         />
       </el-form-item>
+      <el-form-item label="小程序主题色">
+        <div class="theme-field">
+          <el-color-picker v-model="dialogForm.themeColor" :predefine="themeColors" />
+          <el-input v-model.trim="dialogForm.themeColor" maxlength="7" placeholder="#0F766E" />
+        </div>
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="dialogVisible = false">取消</el-button>
@@ -113,13 +123,16 @@ const form = reactive({
   address: "",
   businessHours: "",
   logoUrl: "",
+  themeColor: "#0F766E",
 });
 const dialogForm = reactive({
   name: "",
   address: "",
   businessHours: "",
   logoUrl: "",
+  themeColor: "#0F766E",
 });
+const themeColors = ["#0F766E", "#1D4ED8", "#BE123C", "#7C3AED", "#B45309", "#111827"];
 const saving = ref(false);
 const uploading = ref(false);
 const uploadInput = ref(null);
@@ -164,6 +177,7 @@ function openDialog() {
     address: form.address,
     businessHours: form.businessHours,
     logoUrl: form.logoUrl,
+    themeColor: form.themeColor,
   });
   dialogVisible.value = true;
 }
@@ -176,6 +190,7 @@ async function load() {
       address: profile?.address || "",
       businessHours: profile?.businessHours || "",
       logoUrl: profile?.logoUrl || "",
+      themeColor: profile?.themeColor || "#0F766E",
     });
   } catch (error) {
     showApiError(error);
@@ -187,6 +202,10 @@ async function save() {
     ElMessage.warning("请填写门店名称");
     return;
   }
+  if (!/^#[0-9a-fA-F]{6}$/.test(dialogForm.themeColor || "")) {
+    ElMessage.warning("请输入正确的六位十六进制主题色");
+    return;
+  }
   saving.value = true;
   try {
     const profile = await storeApi.updateProfile({ ...dialogForm });
@@ -195,6 +214,7 @@ async function save() {
       address: profile?.address || "",
       businessHours: profile?.businessHours || "",
       logoUrl: profile?.logoUrl || "",
+      themeColor: profile?.themeColor || "#0F766E",
     });
     dialogVisible.value = false;
     ElMessage.success("门店资料已保存");
@@ -208,3 +228,20 @@ async function save() {
 watch(() => props.reloadKey, load);
 onMounted(load);
 </script>
+
+<style scoped>
+.theme-field {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 180px);
+  gap: 12px;
+  align-items: center;
+}
+
+.theme-swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+}
+</style>
